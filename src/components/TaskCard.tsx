@@ -88,7 +88,7 @@ export const TaskCard = (task: Task) => {
                 </div>          
               </CardHeader>
               <CardFooter>
-                <div className="flex items-center sm:w-1/2 gap-2">
+                <div className="flex items-center flex-wrap sm:w-1/2 gap-2">
                   <Button variant="secondary" className={`${task.completed && "border border-white"} ${buttonStyle}`} onClick={handleStatusChange}>
                     <span>
                       {
