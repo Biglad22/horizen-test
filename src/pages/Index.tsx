@@ -1,9 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, CheckCircle2, Plus, FileText, AlertTriangle } from "lucide-react";
 import { useTimer } from "@/hooks/useTimer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTasks } from "@/context/TaskManager";
+
+import TaskCreationForm from "@/components/TaskCreationForm";
+import { TaskCard } from "@/components/TaskCard";
+import { Input } from "@/components/ui/input";
+import { debounce } from "@/lib/debounceFn";
 
 // TODO: Define proper TypeScript interfaces for Task
 // interface Task {
@@ -18,12 +24,21 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Index = () => {
   // TODO: Implement state management for tasks
-  const [tasks, setTasks] = useState([]);
+  const {tasks, clearTasks, findTask} = useTasks()
   const [showForm, setShowForm] = useState(false);
   const [testStarted, setTestStarted] = useState(false);
-  
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredTask = useMemo(()=> findTask(searchTerm),[searchTerm, tasks])
+
+  const handleSearch = debounce((e:React.ChangeEvent<HTMLInputElement>)=>{
+    setSearchTerm(e.target.value)
+  });
+
+  // TASK MANAGER CONTEXT
   const { timeRemaining, isTimeUp, formatTime, startTimer, resetTimer } = useTimer(3600); // 60 minutes
   
+
   const handleStartTest = () => {
     setTestStarted(true);
     startTimer();
@@ -32,9 +47,11 @@ const Index = () => {
   const handleResetTest = () => {
     setTestStarted(false);
     resetTimer();
-    setTasks([]);
+    clearTasks();
     setShowForm(false);
   };
+
+  
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -191,20 +208,7 @@ const Index = () => {
 
               {/* TODO: Add TaskForm component here when showForm is true */}
               {showForm && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Add New Task</CardTitle>
-                    <CardDescription>Create a new task to manage your work</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      🚧 TODO: Implement the TaskForm component here
-                    </p>
-                    <p className="text-sm mt-2 text-muted-foreground">
-                      Form should include: title, description, priority, due date
-                    </p>
-                  </CardContent>
-                </Card>
+                <TaskCreationForm />
               )}
 
               {/* Task List Area */}
@@ -221,10 +225,23 @@ const Index = () => {
                   </Card>
                 ) : (
                   <div className="grid gap-4">
+                    <Input type="search" placeholder="Type task title" onChange={(handleSearch)} />
                     {/* TODO: Map through tasks and render TaskCard components */}
-                    <p className="text-muted-foreground">
-                      🚧 TODO: Implement TaskCard components here
-                    </p>
+                    {
+                      filteredTask.length > 0 ? (
+                        <div>
+                          {filteredTask.map(task =>(
+                            <TaskCard {...task} key={task.id} /> 
+                          ))}
+                        </div>
+                      ):(
+                        <div className="p-4 rounded-sm border border-border text-muted-foreground">
+                          <p>
+                            No task found
+                          </p>
+                        </div>
+                      )
+                    }
                   </div>
                 )}
               </div>
